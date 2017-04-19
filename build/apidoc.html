@@ -1,0 +1,177 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://git.daplie.com/Daplie/greenlock-cluster#readme"
+
+    >letsencrypt-express (v2.0.6)</a>
+</h1>
+<h4>Free SSL and managed or automatic HTTPS for node.js with Express, Koa, Connect, Hapi, and all other middleware systems.</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.letsencrypt-express">module letsencrypt-express</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.letsencrypt-express.create">
+            function <span class="apidocSignatureSpan">letsencrypt-express.</span>create
+            <span class="apidocSignatureSpan">(opts)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.letsencrypt-express" id="apidoc.module.letsencrypt-express">module letsencrypt-express</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.letsencrypt-express.create" id="apidoc.element.letsencrypt-express.create">
+        function <span class="apidocSignatureSpan">letsencrypt-express.</span>create
+        <span class="apidocSignatureSpan">(opts)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">create = function (opts) {
+  // accept all defaults for le.challenges, le.store, le.middleware
+  var le = require(&#x27;letsencrypt&#x27;).create(opts);
+
+  opts.app = opts.app || function (req, res) {
+    res.end(&#x22;Hello, World!\nWith Love,\nLet&#x27;s Encrypt Express&#x22;);
+  };
+
+  opts.listen = function (plainPort, port) {
+    var PromiseA;
+    try {
+      PromiseA = require(&#x27;bluebird&#x27;);
+    } catch(e) {
+      console.warn(&#x22;Package &#x27;bluebird&#x27; not installed. Using global.Promise instead&#x22;);
+      console.warn(&#x22;(want bluebird instead? npm install --save bluebird)&#x22;);
+      PromiseA = global.Promise;
+    }
+    var promises = [];
+    var plainPorts = plainPort;
+    var ports = port;
+    var servers = [];
+
+    if (!plainPorts) {
+      plainPorts = 80;
+    }
+    if (!ports) {
+      ports = 443;
+    }
+
+    if (!Array.isArray(plainPorts)) {
+      plainPorts = [ plainPorts ];
+      ports = [ ports ];
+    }
+
+    plainPorts.forEach(function (p) {
+      promises.push(new PromiseA(function (resolve, reject) {
+        require(&#x27;http&#x27;).createServer(le.middleware(require(&#x27;redirect-https&#x27;)())).listen(p, function () {
+          console.log(&#x22;Handling ACME challenges and redirecting to https on plain port &#x22; + p);
+          resolve();
+        }).on(&#x27;error&#x27;, reject);
+      }));
+    });
+
+    ports.forEach(function (p) {
+      promises.push(new PromiseA(function (resolve, reject) {
+        var server = require(&#x27;https&#x27;).createServer(le.httpsOptions, le.middleware(le.app)).listen(p, function () {
+          console.log(&#x22;Handling ACME challenges and serving https &#x22; + p);
+          resolve();
+        }).on(&#x27;error&#x27;, reject);
+        servers.push(server);
+      }));
+    });
+
+    if (!Array.isArray(port)) {
+      servers = servers[0];
+    }
+
+    return servers;
+  };
+
+
+  return le;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+Here&#x27;s a completely working example that will get you started:
+
+`app.js`:
+```javascript
+&#x27;use strict&#x27;;
+
+require(&#x27;letsencrypt-express&#x27;).<span class="apidocCodeKeywordSpan">create</span>({
+
+  server: &#x27;staging&#x27;
+
+, email: &#x27;john.doe@example.com&#x27;
+
+, agreeTos: true
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
